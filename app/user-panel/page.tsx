@@ -6,6 +6,7 @@ import Footer from "@/app/components/footer";
 import Header from "@/app/components/header";
 // import home from "@/app/services/home.service";
 import tokenService from "../services/token.service";
+import eventService from "@/app/services/event.service";
 import ServerStatus from "../components/serverStatus";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -16,6 +17,7 @@ import {
   } from "@/lib/features/auth/authSlice";
 import PopupChangePassword from "../components/popupChangePassword";
 import PopupManagement from "../components/popupManagement";
+import ClaimPreregis from "./components/claimPreregis";
 
 export default function Download(){
     const router = useRouter();
@@ -313,6 +315,8 @@ export default function Download(){
         });
     };
 
+    
+
     //#region FUNCTION
     const getJobName = (id: number) => {
         for (let i = 0; i < classList.length; i++) {
@@ -411,7 +415,7 @@ export default function Download(){
                         <div className="text-xl text-white font-bold">{loginInfo.account}</div>
                     </div>
                     <div className="w-full flex flex-col lg:flex-row justify-evenly ">
-                        <div className="w-full lg:w-[300px] pr-0 lg:pr-2 border-r border-r-gray-600 pt-4">
+                        <div className="w-full  lg:max-w-[300px] pr-0 lg:pr-2 border-r border-r-gray-600 pt-4">
                             <div className="field">
                                 <select
                                     value={char}
@@ -430,27 +434,27 @@ export default function Download(){
                                 <table className="w-full text-sm!">
                                     <tr>
                                         <td className="text-left!">Job</td>
-                                        <td>:</td>
+                                        <td className="w-[15px]!">:</td>
                                         <td className="text-left! text-amber-200!">{getJobName(charInfo.base.cls)}</td>
                                     </tr>
                                     <tr>
                                         <td className="text-left!">Level</td>
-                                        <td>:</td>
+                                        <td className="w-[15px]!">:</td>
                                         <td className="text-left! text-amber-200!">{charInfo.status.level}</td>
                                     </tr>
                                     <tr>
                                         <td className="text-left!">Fame</td>
-                                        <td>:</td>
+                                        <td className="w-[15px]!">:</td>
                                         <td className="text-left! text-amber-200!">{charInfo.status.reputation}</td>
                                     </tr>
                                     <tr>
                                         <td className="text-left!">Gold</td>
-                                        <td>:</td>
+                                        <td className="w-[15px]!">:</td>
                                         <td className="text-left! text-amber-200!">{formatNumberWithSeparator(charInfo.pocket.money)}</td>
                                     </tr>
                                     <tr>
                                         <td className="text-left!">Gender</td>
-                                        <td>:</td>
+                                        <td className="w-[15px]!">:</td>
                                         <td className="text-left! text-amber-200!">{convertOnlineTime(charInfo.status.time_used)}</td>
                                     </tr>
                                 </table>
@@ -460,32 +464,32 @@ export default function Download(){
                                 <table className="w-full text-sm!">
                                     <tr>
                                         <td className="text-left!">Cash Coin</td>
-                                        <td>:</td>
+                                        <td className="w-[15px]!">:</td>
                                         <td className="text-left! text-amber-200!">{formatNumberWithSeparator(loginInfo.cash)}</td>
                                     </tr>
                                     <tr>
                                         <td className="text-left!">Total Donate<br/>Monthly</td>
-                                        <td>:</td>
+                                        <td className="w-[15px]!">:</td>
                                         <td className="text-left! text-amber-200!">{formatNumberWithSeparator(loginInfo.money)}</td>
                                     </tr>
                                     <tr>
                                         <td className="text-left!">Last Login</td>
-                                        <td>:</td>
+                                        <td className="w-[15px]!">:</td>
                                         <td className="text-left! text-amber-200!">&nbsp;</td>
                                     </tr>
                                     <tr>
                                         <td className="text-left!">Email</td>
-                                        <td>:</td>
+                                        <td className="w-[15px]!">:</td>
                                         <td className="text-left! text-amber-200!">&nbsp;</td>
                                     </tr>
                                     {loginInfo.reff != "" && <tr>
                                         <td className="text-left!">Reff. Name</td>
-                                        <td>:</td>
+                                        <td className="w-[15px]!">:</td>
                                         <td className="text-left! text-amber-200!">{loginInfo.reff}</td>
                                     </tr>}
                                     {loginInfo.reff != "" && <tr>
                                         <td className="text-left!">Total Reff.</td>
-                                        <td>:</td>
+                                        <td className="w-[15px]!">:</td>
                                         <td className="text-left! text-amber-200!">{loginInfo.reff_total}</td>
                                     </tr>}
                                 </table>
@@ -494,13 +498,14 @@ export default function Download(){
                             <div className="pr-4">
                                 <div className="p-2 border-b border-b-gray-700 text-gray-200 hover:text-amber-200 hover:cursor-pointer" onClick={handleOpenChangePassword}>Change Password</div>
                                 <div className="p-2 border-b border-b-gray-700 text-gray-200 hover:text-amber-200 hover:cursor-pointer" onClick={handleOpenManagement}>Management</div>
+                                <div className="p-2 border-b border-b-gray-700 text-gray-200 hover:text-amber-200 hover:cursor-pointer" onClick={() => router.push("/link")}>Link</div>
                                 <div className="p-2 border-b border-b-gray-700 text-gray-200 hover:text-amber-200 hover:cursor-pointer" onClick={() => router.push("/inspect")}>Inspect</div>
                                 <div className="p-2 border-b border-b-gray-700 text-gray-200 hover:text-amber-200 hover:cursor-pointer" onClick={doLogout}>Logout</div>
                             </div>
                         </div>
                         <div className="grow ">
                             <div className="text-2xl text-gray-200 text-center pt-4">
-                                Welcome to Retro Classic PW Account.
+                              <ClaimPreregis charId={char} />
                             </div>
                         </div>
                     </div>

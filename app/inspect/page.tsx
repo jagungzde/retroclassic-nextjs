@@ -64,6 +64,13 @@ export default function Inspect() {
     maxmdamage:0,
     worldid:0,
     storemoney: 0,
+    logdata: []
+  });
+
+  const [logData, setLogData] = useState([]);
+  const [detailItem, setDetailItem] = useState({
+    color: "",
+    name:""
   });
 
   const classList = [
@@ -130,6 +137,7 @@ export default function Inspect() {
           setEqp(eqp);
           setInv(inv);
           setStore(store);
+          setLogData(res.data.logdata);
         } else {
           alert(res.data);
         }
@@ -209,6 +217,147 @@ export default function Inspect() {
     if (numberValue == null || numberValue == undefined) return "0";
     return numberValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
+
+  const getActionDescription = (log: any) => {
+    if (!log) return 'Unknown action';
+    
+    switch (log.action) {
+      case 'Login':
+      case 'LOGIN':
+        return 'Player logged in';
+        
+      case 'Logout':
+      case 'LOGOUT':
+        return 'Player logged out';
+        
+      case 'Enter World':
+        return 'Player entered the game world';
+        
+      case 'DROP':
+        if (log.details?.itemId && log.details?.quantity) {
+          return `Dropped item ${log.details.itemId} (x${log.details.quantity})`;
+        }
+        return 'Dropped an item';
+        
+      case 'PICKUP':
+        if (log.details?.itemId && log.details?.quantity) {
+          return `Picked up item ${log.details.itemId} (x${log.details.quantity})`;
+        }
+        return 'Picked up an item';
+        
+      case 'SYSMAIL':
+        return `System mail sent (Mail ID: ${log.details?.mailId || 'Unknown'})`;
+        
+      case 'GETMAIL':
+        return `Retrieved mail item ${log.details.itemId} (x${log.details.quantity})${log.details.money > 0 ? `, money ${formatNumberWithSeparator(log.details.money)}` : ''} from ${log.details.senderName} `;
+        
+      case 'TRADE':
+        const totalItems = log.details?.totalItems || 0;
+        const gold1Amount = log.details?.gold1Amount || 0;
+        const gold2Amount = log.details?.gold2Amount || 0;
+        const player1Name = log.details?.player1Name || `Player ${log.details?.player1Id}`;
+        const player2Name = log.details?.player2Name || `Player ${log.details?.player2Id}`;
+        
+        let description = `Trade: ${player1Name} ↔ ${player2Name}`;
+        if (totalItems > 0) {
+          description += ` - ${totalItems} item(s)`;
+        }
+        if (gold1Amount > 0 || gold2Amount > 0) {
+          description += ` - Gold: ${formatNumberWithSeparator(gold1Amount)} / ${formatNumberWithSeparator(gold2Amount)}`;
+        }
+        return description;
+        
+      case 'GSHOPTRADE':
+        // const tradeType = this.getTradeType(log.details?.type);
+        return `Gold Shop trade`;
+        
+      default:
+        return log.action || 'Unknown action';
+    }
+  }
+
+  const bgLog = (action:string) => {
+    let bgColor = '';
+    switch(action){
+      case 'PICKUP': 
+      case 'GETMAIL': bgColor="bg-green-50"; break;
+      case 'DROP': 
+      case 'GSHOPTRADE': bgColor="bg-yellow-50"; break;
+      case 'SYSMAIL': bgColor="bg-purple-50"; break;
+      case 'TRADE': bgColor="bg-orange-50"; break;
+    }
+    return bgColor;
+  }
+
+  const tagAction = (action:string) => {
+    let styles = '';
+    switch(action){
+      case 'PICKUP': 
+      case 'GETMAIL': styles="bg-green-100 text-green-800"; break;
+      case 'DROP': 
+      case 'GSHOPTRADE': styles="bg-yellow-100 text-yellow-800"; break;
+      case 'SYSMAIL': styles="bg-purple-100 text-purple-800"; break;
+      case 'TRADE': styles="bg-orange-100 text-orange-800"; break;
+      default: 
+        styles="bg-gray-100 text-gray-800";
+    }
+    return styles;
+  }
+
+  function parseItems(str:string) {
+    return str
+      .split(";")                 // pisahkan per item
+      .filter(Boolean)            // buang string kosong (akibat ; di akhir)
+      .map(item => {
+        const [itemId, , qty] = item.split(",");
+  
+        return {
+          itemId: Number(itemId),
+          qty: Number(qty),
+        };
+      });
+  }
+
+  const getItemData = async (e:React.MouseEvent<HTMLDivElement> ,itemId:number) => {
+
+    const wrapper = e.currentTarget; // div wrapper yang sedang kena event
+    const itemname = wrapper.querySelector<HTMLElement>(".itemname"); // class di dalam wrapper tsb
+
+    
+    if(itemname?.textContent == ""){
+      await home.item({id: itemId}).then((res2) => {
+        // setDetailItem({color: res2.color, name: res2.name});
+        if(res2.flag == 1){
+          if(itemname){
+            itemname.textContent = res2.name;
+            itemname.style.color = "#"+res2.color;
+            // itemname.classList.add("!text-[#"+res2.color+"]");
+          }
+        }
+      });
+    }
+    
+  }
+
+  const renderImgTrade = (itemsString:string) => {
+    const items = parseItems(itemsString);
+
+    return items.map((item:any, idx:number) => (
+      <div className="relative w-9 group" key={idx} onMouseEnter={(e) => getItemData(e, item.itemId)}>
+        <img
+          src={`https://img.retroclassic.asia/items/${item.itemId}.jpg`}
+          alt={`item ${item.itemId}`}
+          className="w-9 h-9 rounded shadow border border-gray-400 bg-white"
+          loading="lazy"
+          key={idx}
+        />
+        <div className="flex">
+          <div className="absolute hidden group-hover:block -top-2 left-full bg-gray-800 border border-gray-600 text-white z-40 text-sm rounded-lg px-2 w-[100px]"><span className="itemname"></span> x {item.qty}</div>
+        </div>
+      </div>
+      
+    )) 
+  }
   //#endregion
 
   useEffect(() => {
@@ -487,14 +636,16 @@ export default function Inspect() {
                     )}
                     <div className="grid grid-cols-6 gap-2 text-black">
                       {eqp.map((item: any, idx: any) => (
-                        <div className="w-9 h-9 relative group " key={idx}>
+                        <div className="w-9 h-9 relative group " key={idx} onMouseEnter={(e) => getItemData(e, item.id)}>
                           <img
                             src={`https://img.retroclassic.asia/items/${item.id}.jpg`}
                             alt={item.id}
                             className="w-9 h-9 rounded shadow border border-gray-400 bg-white"
                             key={idx}
+                            loading="lazy"
                           />
-                          <div className={`absolute -top-8 left-full z-40 text-xs max-w-20 bg-gray-700 border border-gray-500 rounded py-1 px-2 hidden group-hover:block transition-all duration-300 text-pretty `} style={{ color: item.color ? `#${item.color}` : '#ffffff' }}>{item.count > 1 ? item.name +' x '+item.count : item.name}</div>
+                          {/* <div className={`absolute -top-8 left-full z-40 text-xs max-w-20 bg-gray-700 border border-gray-500 rounded py-1 px-2 hidden group-hover:block transition-all duration-300 text-pretty `} style={{ color: item.color ? `#${item.color}` : '#ffffff' }}>{item.count > 1 ? item.name +' x '+item.count : item.name}</div> */}
+                          <div className="absolute hidden group-hover:block -top-2 left-full bg-gray-800 border border-gray-600 text-white z-40 text-sm rounded-lg px-2 w-[100px]"><span className="itemname"></span> {item.count > 0 ? `x ${item.count}` : ''}</div>
                         </div>
                       ))}
                     </div>
@@ -511,14 +662,16 @@ export default function Inspect() {
                     )}
                     <div className="grid grid-cols-6 gap-2 text-black">
                       {inv.map((item: any, idx: any) => (
-                        <div className="w-9 h-9 relative group " key={idx}>
+                        <div className="w-9 h-9 relative group " key={idx} onMouseEnter={(e) => getItemData(e, item.id)}>
                           <img
                             src={`https://img.retroclassic.asia/items/${item.id}.jpg`}
                             alt={item.id}
                             className="w-9 h-9 rounded shadow border border-gray-400 bg-white"
                             key={idx}
+                            loading="lazy"
                           />
-                          <div className={`absolute -top-8 left-full z-40 text-xs max-w-20 bg-gray-700 border border-gray-500 rounded py-1 px-2 hidden group-hover:block transition-all duration-300 text-pretty `} style={{ color: item.color ? `#${item.color}` : '#ffffff' }}>{item.count > 1 ? item.name +' x '+item.count : item.name}</div>
+                          {/* <div className={`absolute -top-8 left-full z-40 text-xs max-w-20 bg-gray-700 border border-gray-500 rounded py-1 px-2 hidden group-hover:block transition-all duration-300 text-pretty `} style={{ color: item.color ? `#${item.color}` : '#ffffff' }}>{item.count > 1 ? item.name +' x '+item.count : item.name}</div> */}
+                          <div className="absolute hidden group-hover:block -top-2 left-full bg-gray-800 border border-gray-600 text-white z-40 text-sm rounded-lg px-2 w-[100px]"><span className="itemname"></span> {item.count > 0 ? `x ${item.count}` : ''}</div>
                         </div>
                       ))}
                     </div>
@@ -535,14 +688,16 @@ export default function Inspect() {
                     )}
                     <div className="grid grid-cols-6 gap-2 text-black">
                       {store.map((item: any, idx: any) => (
-                        <div className="w-9 h-9 relative group overflow-visible" key={idx}>
+                        <div className="w-9 h-9 relative group overflow-visible" key={idx} onMouseEnter={(e) => getItemData(e, item.id)}>
                           <img
                             src={`https://img.retroclassic.asia/items/${item.id}.jpg`}
                             alt={item.id}
                             className="w-9 h-9 rounded shadow border border-gray-400 bg-white"
                             key={idx}
+                            loading="lazy"
                           />
-                          <div className={`absolute -top-8 left-full z-40 text-xs max-w-20 bg-gray-700 border border-gray-500 rounded py-1 px-2 hidden group-hover:block transition-all duration-300 text-pretty `} style={{ color: item.color ? `#${item.color}` : '#ffffff' }}>{item.count > 1 ? item.name +' x '+item.count : item.name}</div>
+                          {/* <div className={`absolute -top-8 left-full z-40 text-xs max-w-20 bg-gray-700 border border-gray-500 rounded py-1 px-2 hidden group-hover:block transition-all duration-300 text-pretty `} style={{ color: item.color ? `#${item.color}` : '#ffffff' }}>{item.count > 1 ? item.name +' x '+item.count : item.name}</div> */}
+                          <div className="absolute hidden group-hover:block -top-2 left-full bg-gray-800 border border-gray-600 text-white z-40 text-sm rounded-lg px-2 w-[100px]"><span className="itemname"></span> {item.count > 0 ? `x ${item.count}` : ''}</div>
                         </div>
                       ))}
                     </div>
@@ -562,7 +717,67 @@ export default function Inspect() {
                     </div>
                   </div>
                 </div>
+
+                <div className="bg-gray-100 rounded-2xl shadow border border-gray-200 overflow-hidden lg:col-span-3">
+                  <div className="bg-slate-500 text-white text-center font-semibold py-2 rounded-t-2xl">Character Activity Logs</div>
+                  <div className="overflow-y-auto max-h-[300px] rounded-b-2xl">
+                    {logData.filter((item:any) => item.action != 'LOGIN' && item.action != 'LOGOUT').length == 0 && <div className="w-full text-center py-3 text-gray-900">No activity logs found</div>}
+                    {logData
+                      .filter((item:any) => item.action != 'LOGIN' && item.action != 'LOGOUT')
+                      .map((item:any, idx:number) => 
+                      <div className={`flex flex-row justify-between gap-x-3 p-4 border-b border-b-gray-300 ${bgLog(item.action)} `} key={idx}>
+                        <div className="">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${tagAction(item.action)} `}>{item.action}</span>
+                        </div>
+                        <div className="grow flex flex-col">
+                          <div className="text-sm text-gray-900 font-medium">{getActionDescription(item)}</div>
+                          {/* <!-- Quick Info --> */}
+                          <div className="mt-1 flex items-center space-x-4 text-xs text-gray-500">
+                            {item.details?.itemId && item.action !== 'TRADE' && (
+                              <span>Item ID: { item.details.itemId }</span>)}
+                            {item.details?.quantity && item.action !== 'TRADE' && (
+                              <span>Qty: { item.details.quantity }</span>)}
+                            {item.details?.price && (
+                              <span>Price: { item.details.price }</span>)}
+                            {/* TRADE specific info */}
+                            {item.action == 'TRADE' && item.details?.totalItems && (
+                              <span>Total Items: { item.details.totalItems }</span>)}
+                            {item.action == 'TRADE' && (item.details?.gold1Amount > 0 || item.details?.gold2Amount > 0) && (
+                              <span>Gold: { formatNumberWithSeparator(item.details.gold1Amount || 0) } / { formatNumberWithSeparator(item.details.gold2Amount || 0) }</span>)}
+                          </div>
+                          <div className="mt-2">
+                              {item.details?.itemId && item.action !== 'TRADE' && (
+                                <div className="relative w-9 group" onMouseEnter={(e) => getItemData(e, item.details?.itemId)}>
+                                  <img
+                                    src={`https://img.retroclassic.asia/items/${item.details?.itemId}.jpg`}
+                                    alt={`item ${item.details?.itemId}`}
+                                    className="w-9 h-9 rounded shadow border border-gray-400 bg-white"
+                                    loading="lazy"
+                                  />
+                                  <div className="flex">
+                                    <div className="absolute hidden group-hover:block -top-2 left-full bg-gray-800 border border-gray-600 text-white z-40 text-sm rounded-lg px-2 w-[100px]"><span className="itemname"></span> {item.details?.quantity > 0 ? `x ${item.details?.quantity}` : ''}</div>
+                                  </div>
+                                </div>
+                              )}
+                              {item.action == 'TRADE' && item.details?.items1 != "" && (
+                                <div className="flex flex-wrap gap-1">
+                                  {renderImgTrade(item.details?.items1)}
+                                </div>
+                              )}
+                              {item.action == 'TRADE' && item.details?.items2 != "" && (
+                                <div className="flex flex-wrap gap-1">
+                                  {renderImgTrade(item.details?.items2)}
+                                </div>
+                              )}
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-500">{item.timestamp}</div>
+                      </div>
+                    )}
+                  </div>
               </div>
+              </div>
+              
             </div>
           </div>
         </div>

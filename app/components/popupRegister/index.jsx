@@ -19,7 +19,7 @@ export default function PopupRegister({onClose}) {
     var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     let result = re.test(emailValue);
     if (result == true) {
-      if (email.indexOf("@gmail") == -1 && email.indexOf("@yahoo") == -1) {
+      if (emailValue.indexOf("@gmail") == -1 && emailValue.indexOf("@yahoo") == -1) {
         return false;
       } else {
         return true;

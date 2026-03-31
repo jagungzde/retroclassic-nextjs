@@ -93,6 +93,19 @@ const home = {
         });
     });
   },
+  discord(params) {
+    params.rc = apiKey;
+    return new Promise((resolve, reject) => {
+      baseServices
+        .post("/discord", params)
+        .then(function (response) {
+          resolve(response);
+        })
+        .catch(function (error) {
+          reject(error);
+        });
+    });
+  },
 };
 
 export default home;

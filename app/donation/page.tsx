@@ -450,7 +450,7 @@ export default function Download() {
                   {historyList.map((item: any, idx: number) => (
                     <tr
                       key={idx}
-                      className="border-b border-gray-300 hover:bg-gray-100 text-black"
+                      className="border-b border-gray-300 hover:bg-gray-700 hover:text-gray-200 text-black"
                     >
                       <td className="text-left text-sm font-light px-[10px] py-[12px]">
                         {item.id}

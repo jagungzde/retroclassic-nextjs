@@ -71,7 +71,7 @@ export default function DonationConfirmationModal(props) {
           size={256}
           style={{
             height: "auto",
-            maxWidth: "150px",
+            maxWidth: "250px",
             width: "100%",
             margin: "auto",
           }}
@@ -240,7 +240,7 @@ export default function DonationConfirmationModal(props) {
           </div>
           
           {note != "" && (
-            <div className="m-auto mt-6 w-[80%] rounded border border-gray-400 flex items-center justify-center min-h-20 text-[#ffe488] ">
+            <div className="m-auto mt-6 w-[90%] rounded border border-gray-400 flex items-center justify-center min-h-20 text-[#ffe488] ">
               {renderNote()}
             </div>
           )}

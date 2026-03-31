@@ -29,7 +29,7 @@ export default function Footer() {
                     <a href="/"><Image src={Logo} alt="logo" className="w-[200px] m-auto" /></a>
                 </div>
             </div>
-            <div className="basis-1/3 flex justify-end justify-items-end text-right items-center content-center flex-wrap pr-2">
+            <div className="basis-1/3 flex justify-end justify-items-end text-right items-center content-center flex-wrap">
                 <a href="/" className="basis-1/3 my-1 hover:text-[ffe488] hover:underline">Home</a>
                 <a href="/ranking" className="basis-1/3 my-1 hover:text-[ffe488] hover:underline">Ranking</a>
                 <a href="/rules" className="basis-1/3 my-1 hover:text-[ffe488] hover:underline">Rules</a>

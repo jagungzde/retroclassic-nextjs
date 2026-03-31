@@ -122,8 +122,7 @@ export default function PopupManagement({onClose}) {
             <button type="button" 
             disabled={
                       username.length < 4 ||
-                      !validateEmail(email) ||
-                      pin.length < 6
+                      !validateEmail(email)
                     } 
             onClick={doForgotPin}>Forgot PIN</button>
         </div> 
